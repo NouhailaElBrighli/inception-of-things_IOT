@@ -1,4 +1,5 @@
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -8,15 +9,17 @@ from utils import *
 
 
 def notify(title, message):
-    # Use notify-send on Ubuntu
+    """Send a desktop notification using notify-send (Ubuntu)."""
     subprocess.run(f'notify-send "{title}" "{message}"', shell=True)
 
 
 def kill_portforward(process_pattern):
+    """Kill any existing port-forward process that matches the pattern."""
     run(f"pkill -f '{process_pattern}'", capture_output=False)
 
 
 def port_forward(service, namespace, local_port, remote_port):
+    """Start a background port-forward to a Kubernetes service."""
     cmd = (
         f"kubectl port-forward svc/{service} -n {namespace} {local_port}:{remote_port}"
     )
@@ -26,16 +29,20 @@ def port_forward(service, namespace, local_port, remote_port):
 
 
 def copy_to_clipboard(text):
+    """Copy given text to the clipboard using xsel."""
     p = subprocess.Popen("xsel --clipboard --input", stdin=subprocess.PIPE, shell=True)
     p.communicate(input=text.encode())
 
 
-def main():
-    # If not started by another script, refresh Argo CD connection
+def refresh_argocd_connection():
+    """If launched without extra arguments, kill and restart the Argo-CD connection."""
     if len(sys.argv) < 2:
         kill_portforward("kubectl port-forward svc/argocd-server")
         port_forward("argocd-server", "argocd", 9090, 443)
 
+
+def connect_to_ui():
+    """Prompt for UI redirection, copy credentials to clipboard, and open browser."""
     colpr("g", "======== Connect to Argo CD user-interface (UI) ========")
     answer = input("Do you want to be redirected to the argo-cd UI? (y/n): ")
     if answer.lower() == "y":
@@ -54,18 +61,13 @@ def main():
         time.sleep(20)
         subprocess.run("xdg-open 'https://localhost:9090'", shell=True)
 
-    colpr("g", "======== Verify automated synchronization ========")
-    answer = input(
-        "Do you want to push git repo changes to verify if running app synchronizes? (y/n): "
-    )
-    if answer.lower() != "y":
-        sys.exit(0)
 
-    run("gh auth login", capture_output=False)
-
+#! ERROR START FROM HERE #########################################################
+def wait_for_will_app_pods():
+    """Wait for the 'will-app' pods to be ready and report elapsed time."""
     colpr(
         "y",
-        "WAIT until will-app pods are ready before starting... (This can take up to 4 minutes)",
+        "WAIT until will-app pods are ready before starting... (This can take up to 6 minutes)",
     )
     start = time.time()
     wait_proc = run(
@@ -75,54 +77,55 @@ def main():
         notify("App Error", "will-app pods creation timeout")
         colpr("r", "An error occurred. The creation of will-app pods timed out.")
         sys.exit(1)
-    elapsed = int(time.time() - start)
-    minutes = elapsed // 60
-    seconds = elapsed % 60
-    colpr(
-        "y",
-        f"{minutes} minutes and {seconds} seconds elapsed since waiting for will-app pods creation.",
-    )
+    elapsed = elapsed_time(start)
+    colpr("y", f"{elapsed} elapsed since waiting for will-app pods creation.")
 
+
+def update_deployment_image():
+    """Clone the repo, update deployment.yaml, commit and push changes."""
+    # Port-forward will-app-service on port 8888 for testing
     run("kubectl config set-context --current --namespace=dev")
     kill_portforward("kubectl port-forward svc/will-app-service")
-
-    # Port-forward will-app-service on port 8888
     port_forward("will-app-service", "dev", 8888, 8888)
     time.sleep(5)
 
-    # Get current image version (assumes image version is at position 26 in the output)
+    # Retrieve the current image version using regex matching.
     res = run(
         "kubectl describe deployments will-app-deployment | grep 'Image'",
         capture_output=True,
     )
     output = res.stdout.strip()
-    try:
-        imageVersion = int(output[25])
-    except (IndexError, ValueError):
-        colpr("r", "Could not parse image version from deployment description.")
+    match = re.search(r"wil42/playground:v(\d+)", output)
+    if match:
+        imageVersion = int(match.group(1))
+    else:
+        colpr("r", "Could not extract image version from deployment description.")
         sys.exit(1)
+
     newImageVersion = 2 if imageVersion == 1 else 1
 
-    colpr("c", f"Our current app uses version {imageVersion} of the following image")
+    colpr("c", f"Our current app uses version {imageVersion}")
     run("kubectl describe deployments will-app-deployment | grep 'Image'")
     colpr("c", "> curl http://localhost:8888")
     run("curl http://localhost:8888", capture_output=False)
+
     colpr(
         "c",
-        f"\nNow we will change the git repository Argo-CD is connected to so that the image uses version {newImageVersion} instead of {imageVersion}",
+        f"\nChanging the git repo so the image uses version {newImageVersion} instead of {imageVersion}",
     )
     run(
-        "git clone 'git@github.com:NajmiAchraf/inception_of_things.git' tmp",
+        "git clone 'git@github.com:NajmiAchraf/will_IOT.git' tmp",
         capture_output=False,
     )
     time.sleep(2)
-    os.chdir("tmp/p3")
+    os.chdir("tmp")
 
+    # Check for push permissions
     res = run("git push --dry-run", capture_output=True)
     if res.returncode == 128:
         colpr(
             "r",
-            "You don't have the permissions to make changes in repo. You won't be able to verify synchronization.",
+            "You don't have permissions to make changes in the repo. Unable to verify synchronization.",
         )
         os.chdir("..")
         shutil.rmtree("tmp")
@@ -130,18 +133,17 @@ def main():
 
     with open("config/deployment.yaml", "r") as f:
         content = f.read()
-    colpr("y", "Before changing deployment.yaml")
+    colpr("y", "Before updating deployment.yaml")
     colpr("c", "> cat config/deployment.yaml | grep 'image'")
     colpr("c", content)
 
-    # Replace image version in deployment.yaml
     new_content = content.replace(
         f"wil42/playground:v{imageVersion}", f"wil42/playground:v{newImageVersion}"
     )
     with open("config/deployment.yaml", "w") as f:
         f.write(new_content)
 
-    colpr("y", "After changing deployment.yaml")
+    colpr("y", "After updating deployment.yaml")
     colpr("c", "> cat config/deployment.yaml | grep 'image'")
     colpr("c", new_content)
 
@@ -156,51 +158,44 @@ def main():
     time.sleep(2)
     os.chdir("..")
     shutil.rmtree("tmp")
+    return newImageVersion
 
-    colpr(
-        "c",
-        "WAIT until automated synchronization occurs (this can take up to 6 minutes)\nAvoid manual synchronization as it can lead to bugs during this demonstration.",
-    )
+
+def wait_for_sync(newImageVersion):
+    """Wait until the Argo-CD automated synchronization takes effect."""
+    colpr("c", "WAIT until automated synchronization occurs (can take up to 6 minutes)")
     start_sync = time.time()
-    wait_sync = run(
-        f'kubectl wait deployment will-app-deployment --for=jsonpath="{{.spec.template.spec.containers[*].image}}"="wil42/playground:v{newImageVersion}" --timeout=600s'
-    )
+    cmd = f'kubectl wait deployment will-app-deployment --for=jsonpath="{{.spec.template.spec.containers[*].image}}"="wil42/playground:v{newImageVersion}" --timeout=600s'
+    wait_sync = run(cmd)
     if wait_sync.returncode != 0:
         notify("App Error", "Synchronization timeout")
-        colpr("r", "An error occurred. Argo-CD takes abnormally long to synchronize.")
+        colpr("r", "Argo-CD synchronization took abnormally long.")
         sys.exit(1)
-    elapsed_sync = int(time.time() - start_sync)
-    minutes_sync = elapsed_sync // 60
-    seconds_sync = elapsed_sync % 60
-    colpr(
-        "y",
-        f"{minutes_sync} minutes and {seconds_sync} seconds elapsed since waiting for sync.",
-    )
-
-    colpr(
-        "c",
-        f"After automated synchronization the running app should mirror the git repo and use image version {newImageVersion}",
-    )
+    elapsed_sync = elapsed_time(start_sync)
+    colpr("y", f"{elapsed_sync} elapsed since waiting for synchronization.")
+    colpr("c", f"After sync the running app should use image version {newImageVersion}")
     run(
         "kubectl describe deployments will-app-deployment | grep 'Image'",
         capture_output=False,
     )
+    return
 
-    # Find an open port starting from 8889
+
+def test_app_with_curl():
+    """Find an open port to test the updated app using curl."""
     openPort = 8889
     while True:
         result = run(f"lsof -i :{openPort}", capture_output=True)
         if not result.stdout.strip():
             break
         openPort += 1
-
     colpr("c", f"> curl http://localhost:{openPort}")
     time.sleep(5)
     port_forward("will-app-service", "dev", openPort, 8888)
     time.sleep(10)
     curl_proc = run(f"curl http://localhost:{openPort}", capture_output=False)
     while curl_proc.returncode != 0:
-        colpr("y", "Call failed retrying...")
+        colpr("y", "Call failed, retrying...")
         result_pf = run(
             f"ps aux | grep -v 'grep' | grep 'kubectl port-forward svc/will-app-service -n dev {openPort}'",
             capture_output=True,
@@ -211,6 +206,15 @@ def main():
         time.sleep(5)
         curl_proc = run(f"curl http://localhost:{openPort}", capture_output=False)
 
+
+def main():
+    refresh_argocd_connection()
+    connect_to_ui()
+    colpr("g", "======== Verify automated synchronization ========")
+    wait_for_will_app_pods()
+    newVersion = update_deployment_image()
+    wait_for_sync(newVersion)
+    test_app_with_curl()
     notify("Verification finished", "Synchronization results are ready")
 
 

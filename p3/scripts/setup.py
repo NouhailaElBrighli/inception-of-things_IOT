@@ -28,9 +28,29 @@ def InstallPrerequisites():
 
     if not command_exists("argocd"):
         colpr("y", "argocd not installed. Installing argocd...")
-        run("sudo apt-get update && sudo apt-get install -y argocd")
+        run(
+            "VERSION=$(curl -L -s https://raw.githubusercontent.com/argoproj/argo-cd/stable/VERSION)"
+        )
+        run(
+            "curl -sSL -o argocd-linux-amd64 https://github.com/argoproj/argo-cd/releases/download/v$VERSION/argocd-linux-amd64"
+        )
+        run("sudo install -m 555 argocd-linux-amd64 /usr/local/bin/argocd")
+        run("rm argocd-linux-amd64")
+
     else:
         colpr("g", "argocd already installed.")
+
+    if not command_exists("gh"):
+        colpr("y", "gh not installed. Installing gh...")
+        run("sudo apt-get update && sudo apt-get install -y gh")
+    else:
+        colpr("g", "gh already installed.")
+
+    if not command_exists("xsel"):
+        colpr("y", "xsel not installed. Installing xsel...")
+        run("sudo apt-get update && sudo apt-get install -y xsel")
+    else:
+        colpr("g", "xsel already installed.")
 
 
 def InitializeK3DCluster():
@@ -46,7 +66,7 @@ def InitializeK3DCluster():
             colpr("y", "Deleting the existing cluster...")
             run("k3d cluster delete p3")
             colpr("y", "Restarting the cluster...")
-            run("python3 setup.py")
+            run("python3 scripts/setup.py")
             sys.exit(0)
         sys.exit(1)
 
@@ -66,7 +86,7 @@ def ConfigureKubernetesForArgoCD():
     run(
         "kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml"
     )
-    run("python3 launch.py 'called_from_setup'")
+    run("python3 scripts/launch.py 'called_from_setup'")
     sys.exit(0)
 
 
