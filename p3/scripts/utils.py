@@ -80,3 +80,23 @@ def run(cmd, capture_output=False):
         return result
     else:
         return subprocess.run(cmd, shell=True)
+
+
+def notify(title, message):
+    """Send a desktop notification using notify-send (Ubuntu)."""
+    subprocess.run(f'notify-send "{title}" "{message}"', shell=True)
+
+
+def kill_portforward(process_pattern):
+    """Kill any existing port-forward process that matches the pattern."""
+    run(f"pkill -f '{process_pattern}'", capture_output=False)
+
+
+def port_forward(service, namespace, local_port, remote_port):
+    """Start a background port-forward to a Kubernetes service."""
+    cmd = (
+        f"kubectl port-forward svc/{service} -n {namespace} {local_port}:{remote_port}"
+    )
+    return subprocess.Popen(
+        cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+    )

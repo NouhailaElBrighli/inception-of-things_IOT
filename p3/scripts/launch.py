@@ -97,8 +97,8 @@ def sync_and_configure_app():
 
 def run_verify():
     # Pass any additional argument to verify
-    arg = sys.argv[1] if len(sys.argv) > 1 else ""
-    run(f"python3 scripts/verify.py 'called_from_launch' {arg}")
+    run(f"python3 scripts/ui.py 'called_from_launch'")
+    run(f"python3 scripts/verify.py 'called_from_launch'")
     sys.exit(0)
 
 

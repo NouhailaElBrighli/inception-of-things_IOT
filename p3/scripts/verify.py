@@ -8,32 +8,6 @@ import time
 from utils import *
 
 
-def notify(title, message):
-    """Send a desktop notification using notify-send (Ubuntu)."""
-    subprocess.run(f'notify-send "{title}" "{message}"', shell=True)
-
-
-def kill_portforward(process_pattern):
-    """Kill any existing port-forward process that matches the pattern."""
-    run(f"pkill -f '{process_pattern}'", capture_output=False)
-
-
-def port_forward(service, namespace, local_port, remote_port):
-    """Start a background port-forward to a Kubernetes service."""
-    cmd = (
-        f"kubectl port-forward svc/{service} -n {namespace} {local_port}:{remote_port}"
-    )
-    return subprocess.Popen(
-        cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-    )
-
-
-def copy_to_clipboard(text):
-    """Copy given text to the clipboard using xsel."""
-    p = subprocess.Popen("xsel --clipboard --input", stdin=subprocess.PIPE, shell=True)
-    p.communicate(input=text.encode())
-
-
 def refresh_argocd_connection():
     """If launched without extra arguments, kill and restart the Argo-CD connection."""
     if len(sys.argv) < 2:
@@ -41,28 +15,6 @@ def refresh_argocd_connection():
         port_forward("argocd-server", "argocd", 9090, 443)
 
 
-def connect_to_ui():
-    """Prompt for UI redirection, copy credentials to clipboard, and open browser."""
-    colpr("g", "======== Connect to Argo CD user-interface (UI) ========")
-    answer = input("Do you want to be redirected to the argo-cd UI? (y/n): ")
-    if answer.lower() == "y":
-        res = run(
-            'kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d',
-            capture_output=True,
-        )
-        ARGOCD_PASSWORD = res.stdout.strip()
-        colpr("y", "ARGO CD USERNAME: admin")
-        colpr("y", f"ARGO CD PASSWORD: {ARGOCD_PASSWORD} (Pasted to clipboard)")
-        copy_to_clipboard(ARGOCD_PASSWORD)
-        colpr(
-            "y",
-            "Remember those credentials. Login here https://localhost:9090 for the Argo CD UI",
-        )
-        time.sleep(20)
-        subprocess.run("xdg-open 'https://localhost:9090'", shell=True)
-
-
-#! ERROR START FROM HERE #########################################################
 def wait_for_will_app_pods():
     """Wait for the 'will-app' pods to be ready and report elapsed time."""
     colpr(
@@ -106,6 +58,7 @@ def update_deployment_image():
 
     colpr("c", f"Our current app uses version {imageVersion}")
     run("kubectl describe deployments will-app-deployment | grep 'Image'")
+
     colpr("c", "> curl http://localhost:8888")
     run("curl http://localhost:8888", capture_output=False)
 
@@ -117,6 +70,7 @@ def update_deployment_image():
         "git clone 'git@github.com:NajmiAchraf/will_IOT.git' tmp",
         capture_output=False,
     )
+
     time.sleep(2)
     os.chdir("tmp")
 
@@ -209,13 +163,15 @@ def test_app_with_curl():
 
 def main():
     refresh_argocd_connection()
-    connect_to_ui()
-    colpr("g", "======== Verify automated synchronization ========")
-    wait_for_will_app_pods()
-    newVersion = update_deployment_image()
-    wait_for_sync(newVersion)
-    test_app_with_curl()
-    notify("Verification finished", "Synchronization results are ready")
+
+    answer = input("Do you want to verify automated synchronization? (y/n): ")
+    if answer.lower() == "y":
+        colpr("g", "======== Verify automated synchronization ========")
+        wait_for_will_app_pods()
+        newVersion = update_deployment_image()
+        wait_for_sync(newVersion)
+        test_app_with_curl()
+        notify("Verification finished", "Synchronization results are ready")
 
 
 if __name__ == "__main__":

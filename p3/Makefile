@@ -23,10 +23,19 @@ fclean: clean
 	@echo "Deleting the Kubernetes cluster..."
 	python3 scripts/fclean.py
 
+# Open the Argo-CD UI
+ui:
+	@echo "Opening the Argo-CD UI..."
+	python3 scripts/ui.py
+
 # Verify the running app
 verify:
 	@echo "Verifying the Argo-CD app synchronization..."
 	python3 scripts/verify.py
+
+show:
+	@echo "Showing the Argo-CD app status..."
+	python3 scripts/show.py
 
 # Reload the Argo-CD app (clean then launch)
 re_launch: clean launch
