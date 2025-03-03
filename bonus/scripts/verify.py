@@ -1,7 +1,6 @@
 import os
 import re
 import shutil
-import subprocess
 import sys
 import time
 
@@ -67,7 +66,7 @@ def update_deployment_image():
         f"\nChanging the git repo so the image uses version {newImageVersion} instead of {imageVersion}",
     )
     run(
-        "git clone 'git@github.com:NajmiAchraf/will_IOT.git' tmp",
+        "git clone 'http://gitlab.localhost:8081/root/will_IOT.git' tmp",
         capture_output=False,
     )
 
@@ -108,7 +107,8 @@ def update_deployment_image():
         capture_output=False,
     )
     time.sleep(1)
-    run("git push origin master", capture_output=False)
+    run("git branch -M main", capture_output=False)
+    run("git push -uf origin main", capture_output=False)
     time.sleep(2)
     os.chdir("..")
     shutil.rmtree("tmp")

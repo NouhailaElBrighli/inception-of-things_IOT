@@ -31,7 +31,7 @@ def get_gitlab_password():
     copy_to_clipboard(GITLAB_PASSWORD)
     colpr(
         "y",
-        "Remember that password. Login here https://localhost:30080 for the GitLab UI",
+        "Remember that password. Login here https://gitlab.localhost:8081 for the GitLab UI",
     )
 
 

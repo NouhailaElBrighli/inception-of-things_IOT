@@ -25,9 +25,12 @@ def helm_configuration():
         "helm upgrade --install gitlab gitlab/gitlab "
         "--namespace gitlab "
         "--timeout 600s "
+        "--set certmanager-issuer.email=me@example.com "
         "--set global.hosts.domain=localhost "
-        "--set global.hosts.externalIP=0.0.0.0 "
-        "--set certmanager-issuer.email=me@example.com"
+        "--set global.hosts.https=false "
+        "--set global.certmanager.install=false "
+        "--set global.nginx-ingress.enabled=false "
+        "--set global.gitlab-runner.install=false"
     )
 
 
@@ -65,7 +68,7 @@ def start_gitlab_port_forward():
     colpr("g", "Start port-forward to GitLab webservice")
     run("pkill -f 'kubectl port-forward svc/gitlab-webservice-default'")
     subprocess.Popen(
-        "kubectl port-forward svc/gitlab-webservice-default -n gitlab 8081:8181",
+        "kubectl port-forward svc/gitlab-webservice-default -n gitlab 8081:8181 &",
         shell=True,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
@@ -77,7 +80,7 @@ def start_argocd_port_forward():
     colpr("g", "Start port-forward to Argo-CD server")
     run("pkill -f 'kubectl port-forward svc/argocd-server'")
     subprocess.Popen(
-        "kubectl port-forward svc/argocd-server -n argocd 9090:443",
+        "kubectl port-forward svc/argocd-server -n argocd 9090:443 &",
         shell=True,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
@@ -99,47 +102,7 @@ def login_argocd():
 
 
 def create_or_update_app():
-    # Create the Argo-CD app, or, if it exists, offer to delete and recreate it.
-    colpr("g", "Create Argo-CD app 'will'")
-    app_create = run(
-        "argocd app create will --repo 'https://github.com/NajmiAchraf/will_IOT.git' "
-        "--path 'config' --dest-namespace 'dev' --dest-server 'https://kubernetes.default.svc' --grpc-web"
-    )
-    if app_create.returncode == 20:
-        colpr("r", "Error creating Argo-CD app 'will'. It may already exist.")
-        answer = input("Do you want us to delete and recreate the app? (y/n): ")
-        if answer.lower() == "y":
-            colpr("y", "Deleting the app...")
-            run("argocd app delete will --yes --grpc-web")
-            colpr("y", "Relaunching Argo-CD for you.")
-            run("python3 scripts/launch.py")
-            sys.exit(0)
-        sys.exit(1)
-    colpr("g", "View created app before sync and configuration")
-    run("argocd app get will --grpc-web")
-    time.sleep(5)
-
-
-def sync_and_configure_app():
-    # Synchronize the app and set up automation policies
-    colpr("g", "Sync the app and configure for automated synchronization")
-    run("argocd app sync will --grpc-web")
-    time.sleep(5)
-    colpr("y", "> set automated sync policy")
-    run("argocd app set will --sync-policy automated --grpc-web")
-    time.sleep(5)
-    colpr("y", "> set auto-prune policy")
-    run("argocd app set will --auto-prune --allow-empty --grpc-web")
-    time.sleep(5)
-    colpr("g", "View created app after sync and configuration")
-    run("argocd app get will --grpc-web")
-
-
-def run_verify():
-    # Pass any additional argument to verify
-    run(f"python3 scripts/ui.py 'called_from_launch'")
-    run(f"python3 scripts/verify.py 'called_from_launch'")
-    sys.exit(0)
+    run("python3 scripts/create_app.py")
 
 
 def main():
@@ -157,8 +120,6 @@ def main():
     start_gitlab_port_forward()
     login_argocd()
     create_or_update_app()
-    sync_and_configure_app()
-    run_verify()
 
 
 if __name__ == "__main__":
