@@ -32,18 +32,15 @@ def helm_configuration():
 
 
 def wait_for_gitlab_pods():
-    colpr("y", "WAITING FOR GITLAB PODS TO RUN... (This can take up to 60 minutes)")
+    colpr("y", "WAITING FOR GITLAB PODS TO RUN... (This can take up to 6 minutes)")
     if len(sys.argv) > 1 and sys.argv[1] == "called_from_setup":
         time.sleep(10)
     start_time = time.time()
     wait_proc = run(
-        "kubectl wait pod -n gitlab -l app=webservice --for condition=Ready --timeout=3600s"
+        "kubectl wait pod -n gitlab -l app=webservice --for condition=Ready --timeout=600s"
     )
     if wait_proc.returncode != 0:
         colpr("r", "GitLab pods creation timed out.")
-        colpr("r", "Deleting the k3d cluster...")
-        run("make -c .. fclean")
-        sys.exit(1)
     elapsed = elapsed_time(start_time)
     colpr("y", f"{elapsed} elapsed since waiting for GitLab pods creation.")
 
@@ -58,8 +55,6 @@ def wait_for_argocd_pods():
     )
     if wait_proc.returncode != 0:
         colpr("r", "Argo-CD pods creation timed out.")
-        colpr("r", "Deleting the k3d cluster...")
-        run("make -c .. fclean")
         sys.exit(1)
     elapsed = elapsed_time(start_time)
     colpr("y", f"{elapsed} elapsed since waiting for Argo-CD pods creation.")

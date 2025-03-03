@@ -23,7 +23,7 @@ def get_gitlab_password():
     colpr("g", "======== Connect to GitLab user-interface (UI) ========")
     time.sleep(20)
     res = run(
-        'kubectl -n gitlab get secret gitlab-initial-root-password -o jsonpath="{.data.password}" | base64 -d',
+        'kubectl -n gitlab get secret gitlab-gitlab-initial-root-password -o jsonpath="{.data.password}" | base64 -d',
         capture_output=True,
     )
     GITLAB_PASSWORD = res.stdout.strip()

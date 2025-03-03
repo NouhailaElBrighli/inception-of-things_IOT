@@ -14,15 +14,17 @@ def InstallPrerequisites():
 
     if not command_exists("kubectl"):
         colpr("y", "kubectl not installed. Installing kubectl...")
-        run("sudo apt-get update && sudo apt-get install -y kubectl")
+        run(
+            'curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"'
+        )
+        run("sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl")
+        run("rm kubectl")
     else:
         colpr("g", "kubectl already installed.")
 
     if not command_exists("k3d"):
         colpr("y", "k3d not installed. Installing k3d...")
-        run(
-            "curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | TAG=v5.4.5 bash"
-        )
+        run("bash scripts/k3d_install.sh")
     else:
         colpr("g", "k3d already installed.")
 
@@ -52,7 +54,6 @@ def InstallPrerequisites():
     else:
         colpr("g", "xsel already installed.")
 
-    # helm installation
     if not command_exists("helm"):
         colpr("y", "helm not installed. Installing helm...")
         run(
