@@ -6,16 +6,19 @@ from utils import colpr, run
 
 def gitlab():
     # clone from github
-    run("git clone 'git@github.com:NajmiAchraf/will_IOT.git' tmp")
+    run("git clone 'git@github.com:NajmiAchraf/will_IOT.git' tmp", capture_output=False)
     # enter the directory
     run("cd tmp")
     # change the remote to gitlab
-    run("git remote set-url origin 'http://gitlab.localhost:8081/root/will_IOT.git'")
+    run(
+        "git remote set-url origin 'http://gitlab.localhost:8081/root/will_IOT.git'",
+        capture_output=False,
+    )
     # push to gitlab
-    run("git push -uf origin main")
+    run("git push -uf origin master", capture_output=False)
     # remove the directory
-    run("cd ..")
-    run("rm -rf tmp")
+    run("cd ..", capture_output=False)
+    run("rm -rf tmp", capture_output=False)
 
     time.sleep(5)
 

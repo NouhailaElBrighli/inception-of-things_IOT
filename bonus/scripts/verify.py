@@ -107,8 +107,8 @@ def update_deployment_image():
         capture_output=False,
     )
     time.sleep(1)
-    run("git branch -M main", capture_output=False)
-    run("git push -uf origin main", capture_output=False)
+    run("git branch -M master", capture_output=False)
+    run("git push -uf origin master", capture_output=False)
     time.sleep(2)
     os.chdir("..")
     shutil.rmtree("tmp")
