@@ -43,9 +43,14 @@ def sync_and_configure_app():
 
 def run_verify():
     # Pass any additional argument to verify
-    run(f"python3 scripts/ui.py 'called_from_create_app'")
-    run(f"python3 scripts/verify.py 'called_from_create_app'")
-    sys.exit(0)
+    if len(sys.argv) > 1 and sys.argv[1] == "called_from_launch":
+        run(f"python3 scripts/ui.py 'called_from_create_app'")
+        run("python3 scripts/verify.py called_from_launch")
+        sys.exit(0)
+    else:
+        run(f"python3 scripts/ui.py")
+        run(f"python3 scripts/verify.py")
+        sys.exit(0)
 
 
 def main():

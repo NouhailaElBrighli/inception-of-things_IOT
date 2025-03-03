@@ -101,8 +101,8 @@ def login_argocd():
     run("kubectl config set-context --current --namespace=argocd")
 
 
-def create_or_update_app():
-    run("python3 scripts/create_app.py")
+def push_gitlab():
+    run("python3 scripts/gitlab.py called_from_launch")
 
 
 def main():
@@ -119,7 +119,7 @@ def main():
     start_argocd_port_forward()
     start_gitlab_port_forward()
     login_argocd()
-    create_or_update_app()
+    push_gitlab()
 
 
 if __name__ == "__main__":
