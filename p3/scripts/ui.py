@@ -36,18 +36,9 @@ def get_argocd_password():
     )
 
 
-def connect_to_ui():
-    """Prompt for UI redirection, copy credentials to clipboard, and open browser."""
-    time.sleep(20)
-    subprocess.run("xdg-open 'https://localhost:9090'", shell=True)
-
-
 def main():
     refresh_argocd_connection()
     get_argocd_password()
-    answer = input("Do you want to be redirected to the argo-cd UI? (y/n): ")
-    if answer.lower() == "y":
-        connect_to_ui()
 
 
 if __name__ == "__main__":

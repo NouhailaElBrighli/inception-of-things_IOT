@@ -41,16 +41,12 @@ def sync_and_configure_app():
     run("argocd app get will --grpc-web")
 
 
-def run_verify():
-    # Pass any additional argument to verify
-    run(f"python3 scripts/ui.py 'called_from_launch'")
-    run(f"python3 scripts/verify.py 'called_from_launch'")
-    sys.exit(0)
-
-
 def main():
     answer = input("Do you want to create and configure the app? (y/n): ")
     if answer.lower() == "y":
         create_or_update_app()
         sync_and_configure_app()
-        run_verify()
+
+
+if __name__ == "__main__":
+    main()

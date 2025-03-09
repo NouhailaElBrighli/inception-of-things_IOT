@@ -31,7 +31,7 @@ def get_gitlab_password():
     copy_to_clipboard(GITLAB_PASSWORD)
     colpr(
         "y",
-        "Remember that password. Login here https://gitlab.localhost:8081 for the GitLab UI",
+        "Remember that password. Login here http://gitlab.localhost:8081 for the GitLab UI",
     )
 
 
@@ -49,23 +49,14 @@ def get_argocd_password():
     copy_to_clipboard(ARGOCD_PASSWORD)
     colpr(
         "y",
-        "Remember those credentials. Login here https://localhost:9090 for the Argo CD UI",
+        "Remember those credentials. Login here http://localhost:9090 for the Argo CD UI",
     )
-
-
-def connect_to_ui():
-    """Prompt for UI redirection, copy credentials to clipboard, and open browser."""
-    time.sleep(20)
-    subprocess.run("xdg-open 'https://localhost:9090'", shell=True)
 
 
 def main():
     refresh_argocd_connection()
     get_gitlab_password()
     get_argocd_password()
-    answer = input("Do you want to be redirected to the argo-cd UI? (y/n): ")
-    if answer.lower() == "y":
-        connect_to_ui()
 
 
 if __name__ == "__main__":
