@@ -1,0 +1,6 @@
+// server installation
+curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--node-ip=192.168.56.110" sh -S - server
+
+// agent installation 
+curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--node-ip=192.168.56.111" K3S_URL="https://192.168.56.110:6443" K3S_TOKEN="K10cfcaef52807348caf66d1f5215df104183a15900451
+006e00f84109f0d85d124::server:f8bc55830ad4ccc3951d4c26a4c9c692" sh -s - agent
