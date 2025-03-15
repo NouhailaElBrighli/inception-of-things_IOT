@@ -10,10 +10,6 @@ echo 'export PATH=$PATH:/usr/sbin' >> .bashrc
 source .bashrc
 
 SERVER_IP="192.168.56.110"
-AGENT_IP="192.168.56.111"
 
-# Read the token
-NODE_TOKEN=$(cat /vagrant/config/node-token)
-
-# Install K3s Agent
-curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--node-ip=$AGENT_IP" K3S_URL="https://$SERVER_IP:6443" K3S_TOKEN="$NODE_TOKEN" sh -s - agent
+# install k3s
+curl -sfL https://get.k3s.io | sh -s - server --write-kubeconfig-mode 644 --node-ip=$SERVER_IP
