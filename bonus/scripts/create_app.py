@@ -39,7 +39,7 @@ def create_or_update_app():
     login_argocd()
 
     # Create the Argo-CD app, or, if it exists, offer to delete and recreate it.
-    colpr("g", "Create Argo-CD app 'will'")
+    colpr("g", "Create Argo-CD app 'anajmi'")
 
     # Get stored GitLab credentials from Kubernetes secret
     gitlab_user = run(
@@ -75,27 +75,27 @@ def create_or_update_app():
 
     # Register the repository with credentials
     repo_add = run(
-        f"argocd repo add 'http://gitlab-webservice-default.gitlab.svc.cluster.local:8181/root/will_IOT.git' "
+        f"argocd repo add 'http://gitlab-webservice-default.gitlab.svc.cluster.local:8181/root/anajmi_IOT.git' "
         f"--username {gitlab_user} --password {gitlab_pass} --insecure --grpc-web"
     )
 
     # Create the app (credentials are now stored in repo config)
     app_create = run(
-        "argocd app create will "
-        "--repo 'http://gitlab-webservice-default.gitlab.svc.cluster.local:8181/root/will_IOT.git' "
+        "argocd app create anajmi "
+        "--repo 'http://gitlab-webservice-default.gitlab.svc.cluster.local:8181/root/anajmi_IOT.git' "
         "--path 'config' --dest-namespace 'dev' --dest-server 'https://kubernetes.default.svc' "
         "--grpc-web"
     )
 
     if app_create.returncode != 0:
         colpr("r", "Error creating app. Trying to delete existing app first...")
-        run("argocd app delete will --yes --grpc-web")
+        run("argocd app delete anajmi --yes --grpc-web")
         time.sleep(3)
 
         # Try creating again
         run(
-            "argocd app create will "
-            "--repo 'http://gitlab-webservice-default.gitlab.svc.cluster.local:8181/root/will_IOT.git' "
+            "argocd app create anajmi "
+            "--repo 'http://gitlab-webservice-default.gitlab.svc.cluster.local:8181/root/anajmi_IOT.git' "
             "--path 'config' --dest-namespace 'dev' --dest-server 'https://kubernetes.default.svc' "
             "--grpc-web"
         )
@@ -107,16 +107,16 @@ def sync_and_configure_app():
 
     # Synchronize the app and set up automation policies
     colpr("g", "Sync the app and configure for automated synchronization")
-    run("argocd app sync will --grpc-web")
+    run("argocd app sync anajmi --grpc-web")
     time.sleep(5)
     colpr("y", "> set automated sync policy")
-    run("argocd app set will --sync-policy automated --grpc-web")
+    run("argocd app set anajmi --sync-policy automated --grpc-web")
     time.sleep(5)
     colpr("y", "> set auto-prune policy")
-    run("argocd app set will --auto-prune --allow-empty --grpc-web")
+    run("argocd app set anajmi --auto-prune --allow-empty --grpc-web")
     time.sleep(5)
     colpr("g", "View created app after sync and configuration")
-    run("argocd app get will --grpc-web")
+    run("argocd app get anajmi --grpc-web")
 
 
 def main():

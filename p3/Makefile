@@ -13,7 +13,7 @@ launch:
 	@echo "Launching Argo-CD app..."
 	python3 scripts/launch.py
 
-# Create will app Argo-CD app
+# Create anajmi app Argo-CD app
 create:
 	@echo "Creating Argo-CD app..."
 	python3 scripts/create_app.py

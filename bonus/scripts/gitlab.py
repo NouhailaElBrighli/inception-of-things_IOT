@@ -1,10 +1,10 @@
+import json
+import os
+import subprocess
 import sys
 import time
-import os
-import json
-import subprocess
 
-from utils import run, colpr
+from utils import colpr, run
 
 
 def create_gitlab_token():
@@ -73,8 +73,8 @@ def gitlab():
 
     # Clone from GitHub and push to GitLab with credentials
     run(
-        f"cd /tmp && rm -rf will_IOT && git clone 'https://github.com/NajmiAchraf/will_IOT.git' && "
-        f"cd will_IOT && git remote set-url origin 'http://{username}:{GITLAB_PASSWORD}@gitlab.localhost:8081/{username}/will_IOT.git' && "
+        f"cd /tmp && rm -rf anajmi_IOT && git clone 'https://github.com/NajmiAchraf/anajmi_IOT.git' && "
+        f"cd anajmi_IOT && git remote set-url origin 'http://{username}:{GITLAB_PASSWORD}@gitlab.localhost:8081/{username}/anajmi_IOT.git' && "
         f"git push -uf origin master",
         capture_output=False,
     )
@@ -84,7 +84,9 @@ def gitlab():
 
 
 def main():
-    answer = input("Do you want to clone the repo from github to gitlab of course if you already created a repos under 'will_IOT' name? (y/n): ")
+    answer = input(
+        "Do you want to clone the repo from github to gitlab of course if you already created a repos under 'anajmi_IOT' name? (y/n): "
+    )
     if answer.lower() == "y":
         gitlab()
 

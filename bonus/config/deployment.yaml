@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: will-app-deployment
+  name: anajmi-app-deployment
   labels:
-    app: will
+    app: anajmi
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: will
+      app: anajmi
   template:
     metadata:
       labels:
-        app: will
+        app: anajmi
     spec:
       containers:
-      - name: will
+      - name: anajmi
         image: wil42/playground:v1
         ports:
         - containerPort: 8888

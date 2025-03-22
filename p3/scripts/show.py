@@ -28,7 +28,7 @@ def show_state_argocd():
         time.sleep(3)
         res = run("argocd app list --grpc-web")
         if res.returncode != 0:
-            colpr("r", "An error occurred. The creation of will-app pods timed out.")
+            colpr("r", "An error occurred. The creation of anajmi-app pods timed out.")
             sys.exit(1)
 
 
