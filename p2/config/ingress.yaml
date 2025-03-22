@@ -3,6 +3,7 @@ kind: Ingress
 metadata:
   name: app-ingress
 spec:
+  ingressClassName: traefik
   rules:
     - host: app1.com
       http:
@@ -24,7 +25,7 @@ spec:
                 name: app2
                 port:
                   number: 80
-    - host: app3.com
+    - host:
       http:
         paths:
           - path: /
