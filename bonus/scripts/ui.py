@@ -27,6 +27,7 @@ def get_gitlab_password():
         capture_output=True,
     )
     GITLAB_PASSWORD = res.stdout.strip()
+    colpr("y", "GITLAB  USERNAME: root")
     colpr("y", f"GITLAB PASSWORD: {GITLAB_PASSWORD} (Pasted to clipboard)")
     copy_to_clipboard(GITLAB_PASSWORD)
     colpr(

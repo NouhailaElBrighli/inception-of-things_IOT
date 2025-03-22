@@ -69,13 +69,13 @@ def create_gitlab_token():
 
 def gitlab():
     pwd = run("pwd", capture_output=True).stdout
-    username, token = create_gitlab_token()
+    username, GITLAB_PASSWORD = create_gitlab_token()
 
     # Clone from GitHub and push to GitLab with credentials
     run(
-        "cd /tmp && rm -rf will_IOT && git clone 'https://github.com/NajmiAchraf/will_IOT.git' && "
-        "cd will_IOT && git remote set-url origin 'http://root:${GITLAB_PASSWORD}@gitlab.localhost:8081/root/will_IOT.git' && "
-        "git push -uf origin master",
+        f"cd /tmp && rm -rf will_IOT && git clone 'https://github.com/NajmiAchraf/will_IOT.git' && "
+        f"cd will_IOT && git remote set-url origin 'http://{username}:{GITLAB_PASSWORD}@gitlab.localhost:8081/{username}/will_IOT.git' && "
+        f"git push -uf origin master",
         capture_output=False,
     )
 
@@ -84,7 +84,7 @@ def gitlab():
 
 
 def main():
-    answer = input("Do you want to clone the repo from github to gitlab? (y/n): ")
+    answer = input("Do you want to clone the repo from github to gitlab of course if you already created a repos under 'will_IOT' name? (y/n): ")
     if answer.lower() == "y":
         gitlab()
 
