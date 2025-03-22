@@ -5,8 +5,7 @@ echo "somethin" | docker login --username "nouhaila18" --password-stdin
 echo 'export PATH=$PATH:/usr/sbin' >> .bashrc
 
 kubectl label nodes nel-brigs ingress-ready=true
-ingressClassName: "traefik"
+
 kubectl apply -f https://raw.githubusercontent.com/traefik/traefik/v2.3/examples/k8s/traefik-rbac.yaml
 
 
-ingressClassName: "traefik"

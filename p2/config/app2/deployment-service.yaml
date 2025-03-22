@@ -18,12 +18,13 @@ spec:
         - name: app2
           image: nginx
           volumeMounts:
-            - name: html-volume
-              mountPath: /usr/share/nginx/html
+          - name: html-volume
+            mountPath: /usr/share/nginx/html
       volumes:
         - name: html-volume
-          configMap:
-            name: app2-html
+          hostPath:
+            path: /vagrant/config/app2/index
+            type: DirectoryOrCreate
 ---
 apiVersion: v1
 kind: Service
