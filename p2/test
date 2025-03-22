@@ -1,0 +1,11 @@
+# authentication to solve usage limit for docker 
+echo "somethin" | docker login --username "nouhaila18" --password-stdin
+
+# add /usr/sbin to the PATH for run the command ifconfig without sudo
+echo 'export PATH=$PATH:/usr/sbin' >> .bashrc
+
+kubectl label nodes nel-brigs ingress-ready=true
+
+kubectl apply -f https://raw.githubusercontent.com/traefik/traefik/v2.3/examples/k8s/traefik-rbac.yaml
+
+
